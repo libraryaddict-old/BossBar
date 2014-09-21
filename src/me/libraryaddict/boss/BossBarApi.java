@@ -2,11 +2,14 @@ package me.libraryaddict.boss;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
@@ -62,15 +65,19 @@ public class BossBarApi {
     private static void sendSpawnPacket(Player player, String message, float health) throws Exception {
         PacketContainer spawnPacket = new PacketContainer(PacketType.Play.Server.SPAWN_ENTITY_LIVING);
         StructureModifier<Object> spawnPacketModifier = spawnPacket.getModifier();
+        Location toSpawn = player.getEyeLocation().add(player.getEyeLocation().getDirection().normalize().multiply(23));
         spawnPacketModifier.write(0, enderdragonId);
-        spawnPacketModifier.write(1, (byte) 63); // EntityID of wither
-        spawnPacketModifier.write(2, player.getLocation().getBlockX() * 32);
-        spawnPacketModifier.write(3, -378 * 32);
-        spawnPacketModifier.write(4, player.getLocation().getBlockZ() * 32);
+        spawnPacketModifier.write(1, (byte) 64); // EntityID of wither
+        spawnPacketModifier.write(2, toSpawn.getBlockX() * 32);
+        spawnPacketModifier.write(3, toSpawn.getBlockY() * 32);
+        spawnPacketModifier.write(4, toSpawn.getBlockZ() * 32);
         // Make the datawatcher that turns it invisible
         WrappedDataWatcher watcher = new WrappedDataWatcher();
+        watcher.setObject(0, (byte) 32);
+        watcher.setObject(2, message);
         watcher.setObject(6, health, true); // Set health
         watcher.setObject(10, message);
+        watcher.setObject(20, 881);
         spawnPacket.getDataWatcherModifier().write(0, watcher);
         ProtocolLibrary.getProtocolManager().sendServerPacket(player, spawnPacket, false);
     }
